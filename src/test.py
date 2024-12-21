@@ -1,73 +1,78 @@
-import Adafruit_BBIO.GPIO as GPIO
+import os
 import time
-from pydub import AudioSegment
-from pydub.playback import play
 
-# GPIO Pin Assignments
-motor_1_pin = "P9_41"  # GPIO 20
-motor_2_pin = "P9_27"  # GPIO 115
-photoresistor_pin = "P8_9"  # GPIO 69
-button_pin = "P8_18"  # GPIO 65
+# GPIO Pin Definitions
+pins = {
+    "motor_1": 20,   # GPIO 20, P9_41
+    "motor_2": 115,  # GPIO 115, P9_27
+    "photoresistor": 69,  # GPIO 69, P8_9
+    "button": 65,  # GPIO 65, P8_18
+}
+
+def export_pins():
+    for name, pin in pins.items():
+        if not os.path.exists(f"/sys/class/gpio/gpio{pin}"):
+            with open("/sys/class/gpio/export", "w") as f:
+                f.write(str(pin))
+
+def set_pin_direction(pin, direction):
+    with open(f"/sys/class/gpio/gpio{pin}/direction", "w") as f:
+        f.write(direction)
+
+def write_pin(pin, value):
+    with open(f"/sys/class/gpio/gpio{pin}/value", "w") as f:
+        f.write(str(value))
+
+def read_pin(pin):
+    with open(f"/sys/class/gpio/gpio{pin}/value", "r") as f:
+        return int(f.read().strip())
 
 def initialize_pins():
-    # Set up motor pins
-    GPIO.setup(motor_1_pin, GPIO.OUT)
-    GPIO.setup(motor_2_pin, GPIO.OUT)
-    
-    # Set up sensor pins
-    GPIO.setup(photoresistor_pin, GPIO.IN)
-    GPIO.setup(button_pin, GPIO.IN)
+    print("Initializing GPIO pins...")
+    export_pins()
+    set_pin_direction(pins["motor_1"], "out")
+    set_pin_direction(pins["motor_2"], "out")
+    set_pin_direction(pins["photoresistor"], "in")
+    set_pin_direction(pins["button"], "in")
+    print("Pins initialized.")
 
 def motor_test():
     print("Testing motors...")
-    GPIO.output(motor_1_pin, GPIO.HIGH)
+    write_pin(pins["motor_1"], 1)
     time.sleep(1)
-    GPIO.output(motor_1_pin, GPIO.LOW)
+    write_pin(pins["motor_1"], 0)
     time.sleep(1)
-    GPIO.output(motor_2_pin, GPIO.HIGH)
+    write_pin(pins["motor_2"], 1)
     time.sleep(1)
-    GPIO.output(motor_2_pin, GPIO.LOW)
+    write_pin(pins["motor_2"], 0)
     print("Motor test complete.")
 
 def photoresistor_test():
     print("Testing photoresistor...")
-    if GPIO.input(photoresistor_pin):
-        print("Light detected.")
-    else:
-        print("No light detected.")
+    value = read_pin(pins["photoresistor"])
+    print(f"Photoresistor value: {'Light detected' if value else 'No light detected'}")
 
 def button_test():
     print("Testing button...")
-    if GPIO.input(button_pin):
-        print("Button pressed.")
-    else:
-        print("Button not pressed.")
+    value = read_pin(pins["button"])
+    print(f"Button state: {'Pressed' if value else 'Not pressed'}")
 
-def speaker_test():
-    print("Testing speaker...")
-    try:
-        sound = AudioSegment.from_file("test_audio.mp3", format="mp3")
-        play(sound)
-        print("Speaker test complete.")
-    except Exception as e:
-        print(f"Speaker test failed: {e}")
-
-def cleanup():
+def cleanup_pins():
     print("Cleaning up GPIO...")
-    GPIO.cleanup()
+    for pin in pins.values():
+        with open("/sys/class/gpio/unexport", "w") as f:
+            f.write(str(pin))
+    print("GPIO cleanup complete.")
 
 if __name__ == "__main__":
     try:
-        print("Initializing hardware...")
         initialize_pins()
-        time.sleep(1)
-        
         motor_test()
         photoresistor_test()
         button_test()
-        speaker_test()
-        
     except KeyboardInterrupt:
         print("Test interrupted by user.")
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
-        cleanup()
+        cleanup_pins()
