@@ -72,6 +72,7 @@ def photoresistor_test():
     # Cover test
     input("Please cover the photoresistor and press Enter to start.")
     for i in range(10):
+        print(f"Light reading: {read_pin(pins["photoresistor"])}")
         if not read_pin(pins["photoresistor"]):
             print("Photoresistor detected darkness (covered).")
             break
@@ -82,6 +83,7 @@ def photoresistor_test():
     # Light test
     input("Now shine a light on the photoresistor and press Enter to start.")
     for i in range(10):
+        print(f"Light reading: {read_pin(pins["photoresistor"])}")
         if read_pin(pins["photoresistor"]):
             print("Photoresistor detected light.")
             break
