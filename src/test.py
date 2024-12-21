@@ -27,6 +27,13 @@ def read_pin(pin):
     with open(f"/sys/class/gpio/gpio{pin}/value", "r") as f:
         return int(f.read().strip())
 
+def user_confirmation(test_name):
+    while True:
+        response = input(f"Ready to run the {test_name} test? (y/n/skip): ").strip().lower()
+        if response in ["y", "n", "skip"]:
+            return response
+        print("Invalid input. Please enter 'y' to proceed, 'n' or 'skip' to skip this test.")
+
 def initialize_pins():
     print("Initializing GPIO pins...")
     export_pins()
@@ -37,25 +44,50 @@ def initialize_pins():
     print("Pins initialized.")
 
 def motor_test():
-    print("Testing motors...")
-    write_pin(pins["motor_1"], 1)
-    time.sleep(1)
-    write_pin(pins["motor_1"], 0)
-    time.sleep(1)
-    write_pin(pins["motor_2"], 1)
-    time.sleep(1)
-    write_pin(pins["motor_2"], 0)
+    print("Testing motors (each 3 times)...")
+    for i in range(3):
+        print(f"Cycle {i + 1}...")
+        write_pin(pins["motor_1"], 1)
+        time.sleep(1)
+        write_pin(pins["motor_1"], 0)
+        time.sleep(1)
+        write_pin(pins["motor_2"], 1)
+        time.sleep(1)
+        write_pin(pins["motor_2"], 0)
+        time.sleep(1)
     print("Motor test complete.")
+
+def button_test():
+    print("Testing button... Press the button within 10 seconds.")
+    for i in range(10):
+        if read_pin(pins["button"]):
+            print("Button pressed!")
+            return
+        time.sleep(1)
+    print("Button not pressed within the timeout period.")
 
 def photoresistor_test():
     print("Testing photoresistor...")
-    value = read_pin(pins["photoresistor"])
-    print(f"Photoresistor value: {'Light detected' if value else 'No light detected'}")
 
-def button_test():
-    print("Testing button...")
-    value = read_pin(pins["button"])
-    print(f"Button state: {'Pressed' if value else 'Not pressed'}")
+    # Cover test
+    input("Please cover the photoresistor and press Enter to start.")
+    for i in range(10):
+        if not read_pin(pins["photoresistor"]):
+            print("Photoresistor detected darkness (covered).")
+            break
+        time.sleep(1)
+    else:
+        print("Photoresistor did not detect darkness within the timeout period.")
+
+    # Light test
+    input("Now shine a light on the photoresistor and press Enter to start.")
+    for i in range(10):
+        if read_pin(pins["photoresistor"]):
+            print("Photoresistor detected light.")
+            break
+        time.sleep(1)
+    else:
+        print("Photoresistor did not detect light within the timeout period.")
 
 def cleanup_pins():
     print("Cleaning up GPIO...")
@@ -67,9 +99,22 @@ def cleanup_pins():
 if __name__ == "__main__":
     try:
         initialize_pins()
-        motor_test()
-        photoresistor_test()
-        button_test()
+        
+        if user_confirmation("motor") == "y":
+            motor_test()
+        else:
+            print("Skipping motor test.")
+
+        if user_confirmation("button") == "y":
+            button_test()
+        else:
+            print("Skipping button test.")
+
+        if user_confirmation("photoresistor") == "y":
+            photoresistor_test()
+        else:
+            print("Skipping photoresistor test.")
+
     except KeyboardInterrupt:
         print("Test interrupted by user.")
     except Exception as e:
