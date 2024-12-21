@@ -1,0 +1,28 @@
+/dts-v1/;
+/plugin/;
+/ {
+    fragment@0 {
+        target = <&am33xx_pinmux>;
+        __overlay__ {
+            custom_gpio_pins: pinmux_custom_gpio_pins {
+                pinctrl-single,pins = <
+                    0x0A0 0x07  /* P9_41 as GPIO */
+                    0x0C8 0x07  /* P9_27 as GPIO */
+                    0x190 0x07  /* P8_9 as GPIO */
+                    0x148 0x07  /* P8_18 as GPIO */
+                >;
+            };
+        };
+    };
+    fragment@1 {
+        target = <&ocp>;
+        __overlay__ {
+            custom_gpio {
+                compatible = "bone-pinmux-helper";
+                pinctrl-names = "default";
+                pinctrl-0 = <&custom_gpio_pins>;
+                status = "okay";
+            };
+        };
+    };
+};
