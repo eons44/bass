@@ -40,12 +40,10 @@ class Fish:
         this.audio.manifest = None
         this.audio.vlc = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
         this.audio.player = None
+        this.audio.volume = 60
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
-
-        # Set volume to 50%
-        this.audio.vlc.audio_set_volume(50)
 
         this.pin = eons.util.DotDict()
         this.pin.output = eons.util.DotDict()
@@ -148,6 +146,7 @@ class Fish:
 
         print(f"Playing song: {song_choice} ({song_path})")
         this.audio.player = this.audio.vlc.media_player_new(this.current.song)
+        this.audio.player.audio_set_volume(this.audio.volume)
         this.audio.player.play()
 
         # Wait for the player to start playing
