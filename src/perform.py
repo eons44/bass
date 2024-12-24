@@ -144,7 +144,7 @@ class Fish:
         this.current.tempo = song_tempo
 
         print(f"Playing song: {song_choice} ({song_path})")
-        this.audio.player = instance.media_player_new(this.current.song)
+        this.audio.player = this.audio.vlc.media_player_new(this.current.song)
         this.player.play()
 
         # Wait for the player to start playing
