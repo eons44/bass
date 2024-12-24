@@ -115,7 +115,7 @@ class Fish:
     def motor_dance_to_beat(this, msPerBeat=500):
         """Move the tail to the beat using VLC's playback position."""
         last_position = -1
-        while this.player.is_playing():
+        while this.audio.player.is_playing():
             current_position = int(player.get_time() / msPerBeat) 
             if current_position != last_position:
                 last_position = current_position
@@ -126,7 +126,7 @@ class Fish:
                 toggle_mouth()
 
             if (GPIOUtils.read_gpio(this.input.button)):
-                this.player.stop()
+                this.audio.player.stop()
                 break
 
     def play_random_song(this):
@@ -145,11 +145,11 @@ class Fish:
 
         print(f"Playing song: {song_choice} ({song_path})")
         this.audio.player = this.audio.vlc.media_player_new(this.current.song)
-        this.player.play()
+        this.audio.player.play()
 
         # Wait for the player to start playing
         for _ in range(10):  # Check for up to 10 seconds
-            if this.player.is_playing():
+            if this.audio.player.is_playing():
                 return
             time.sleep(0.5)
 
