@@ -102,15 +102,15 @@ class Fish:
 
     def toggle_mouth(this):
         """Toggle the mouth motor."""
-        write_gpio(this.pin.output.motor.mouth, 1)
+        GPIOUtils.write_gpio(this.pin.output.motor.mouth, 1)
         time.sleep(0.2)
-        write_gpio(this.pin.output.motor.mouth, 0)
+        GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
 
     def toggle_tail(this):
         """Toggle the tail motor."""
-        write_gpio(this.pin.output.motor.tail, 1)
+        GPIOUtils.write_gpio(this.pin.output.motor.tail, 1)
         time.sleep(0.4)
-        write_gpio(this.pin.output.motor.tail, 0)
+        GPIOUtils.write_gpio(this.pin.output.motor.tail, 0)
 
     def motor_dance_to_beat(this, msPerBeat=500):
         """Move the tail to the beat using VLC's playback position."""
