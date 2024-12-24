@@ -143,7 +143,18 @@ class Fish:
             f"--gain={this.audio.volume}",
             song_path
         ]
-        this.current.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            this.current.process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            stdout, stderr = this.current.process.communicate()  # Wait for the process
+            if stderr:
+                print("Error during playback:", stderr.decode())
+        except Exception as e:
+            print(f"Subprocess error: {e}")
+            this.current.process = None
 
 # Main Function
 def main():
