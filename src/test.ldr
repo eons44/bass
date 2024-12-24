@@ -1,0 +1,87 @@
+pin::(
+    map := [
+        motor := [
+            head := 20
+            tail := 21
+        ]
+        sensor := [
+            light := 69
+            button := 65
+        ]
+    ]
+
+    set_direction::(pin, direction)
+    {
+        open(`/sys/class/gpio/gpio{pin}/direction`, 'w').write(direction).close()
+    }
+
+    read::(pin)
+    {
+        f := open(`/sys/class/gpio/gpio{pin}/value`, 'r')
+        ret := f.read()
+        f.close()
+        return ret
+    }
+
+    write::(pin, value)
+    {
+        open(`/sys/class/gpio/gpio{pin}/value`, 'w').write(value).close()
+    }
+
+    export::(pin)
+    {
+        if (os.path.exists(`/sys/class/gpio/gpio{pin}`))
+        {
+            return
+        }
+        open('/sys/class/gpio/export', 'w').write(pin).close()
+    }
+
+    unexport::(pin)
+    {
+        if (!os.path.exists(`/sys/class/gpio/gpio{pin}`))
+        {
+            return
+        }
+        open('/sys/class/gpio/unexport', 'w').write(pin).close()
+    }
+
+    init::()
+    {
+        for (map['motor']) [m]
+        {
+            export(map['motor'][m])
+            set_direction(map['motor'][m], 'out')
+        }
+
+        for (map['sensor']) [s]
+        {
+            export(map['sensor'][s])
+            set_direction(map['sensor'][s], 'in')
+        }
+    }
+
+    cleanup::()
+    {
+        for (map['motor']) [m]
+        {
+            unexport(map['motor'][m])
+        }
+
+        for (map['sensor']) [s]
+        {
+            unexport(map['sensor'][s])
+        }
+    }
+)
+
+pin.init()
+pin.write(pin.map['motor']['head'], 1)
+time.sleep(1)
+pin.write(pin.map['motor']['head'], 0)
+time.sleep(1)
+pin.write(pin.map['motor']['tail'], 1)
+time.sleep(1)
+pin.write(pin.map['motor']['tail'], 0)
+time.sleep(1)
+pin.cleanup()
