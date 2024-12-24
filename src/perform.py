@@ -33,9 +33,12 @@ class GPIOUtils:
 class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
-        this.audio.manifest = json.loads(os.path.expanduser("~/music.json"))
+        this.audio.manifest = None
         this.audio.vlc = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
         this.audio.player = None
+
+        with open(os.path.expanduser("~/music.json")) as f:
+            this.audio.manifest = json.load(f)
 
         this.pin = eons.util.DotDict()
         this.pin.output = eons.util.DotDict()

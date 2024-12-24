@@ -1,10 +1,12 @@
 {
-    "Sex Machine" : {
+    "Sex Machine":
+    {
         "artist": "James Brown",
         "path": "~/music/Get Up (I Feel Like Being A) Sex Machine.mp3",
         "tempo": 555
     },
-    "Back in the USSR": {
+    "Back in the USSR":
+    {
         "artist": "The Beatles",
         "path": "~/music/Back in the USSR.mp3",
         "tempo": 465
