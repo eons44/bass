@@ -2,8 +2,7 @@ import os
 import random
 import time
 import json
-# import librosa  # For audio analysis
-import vlc  # For audio playback
+import subprocess
 import eons
 
 class GPIOUtils:
@@ -38,13 +37,7 @@ class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
         this.audio.manifest = None
-        this.audio.vlc = vlc.Instance(
-            "--aout=alsa",
-            "--alsa-audio-device=hw:1,0",
-            "--alsa-samplerate=44100",
-        )
-        this.audio.player = None
-        this.audio.volume = 5 # testing
+        this.audio.volume = 0.05  # VLC gain value (e.g., 5% volume)
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
@@ -52,10 +45,10 @@ class Fish:
         this.pin = eons.util.DotDict()
         this.pin.output = eons.util.DotDict()
         this.pin.output.motor = eons.util.DotDict()
-        this.pin.output.motor.tail = 20 # GPIO 20, P9_41 (Tail)
-        this.pin.output.motor.mouth = 115 # GPIO 115, P9_27 (mouth)
+        this.pin.output.motor.tail = 20  # GPIO 20, P9_41 (Tail)
+        this.pin.output.motor.mouth = 115  # GPIO 115, P9_27 (Mouth)
         this.input = eons.util.DotDict()
-        this.input.button = 65 # GPIO 65, P8_18
+        this.input.button = 65  # GPIO 65, P8_18
 
         GPIOUtils.export_gpio(this.pin.output.motor.tail)
         GPIOUtils.export_gpio(this.pin.output.motor.mouth)
@@ -68,6 +61,7 @@ class Fish:
         this.current = eons.util.DotDict()
         this.current.song = None
         this.current.tempo = None
+        this.current.process = None
 
         print("Initialization complete.")
 
@@ -78,6 +72,9 @@ class Fish:
         GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
         GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
         GPIOUtils.unexport_gpio(this.input.button)
+
+        if this.current.process:
+            this.current.process.terminate()
 
         print("Cleanup complete.")
 
@@ -93,19 +90,8 @@ class Fish:
 
     def detect_tempo(this):
         """Detect the tempo (BPM) of the song."""
-
         print(f"Tempo for {this.current.song} is {this.current.tempo} ms / beat.")
-        
-        # Easy way: use the manifest
         return this.current.tempo
-
-        # Hard way: will auto-detect tempo
-        # (Librosa never successfully installed on the BeagleBone Black.)
-        # print(f"Analyzing tempo for: {this.current.song}")
-        # y, sr = librosa.load(this.current.song, sr=None)  # Load the audio file
-        # tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        # print(f"Detected tempo: {tempo:.2f} BPM")
-        # return 60000 / tempo   # Convert BPM to milliseconds per beat
 
     def toggle_mouth(this):
         """Toggle the mouth motor."""
@@ -120,26 +106,23 @@ class Fish:
         GPIOUtils.write_gpio(this.pin.output.motor.tail, 0)
 
     def motor_dance_to_beat(this, msPerBeat=500):
-        """Move the tail to the beat using VLC's playback position."""
-        last_position = -1
-        while this.audio.player.is_playing():
-            # current_position = int(this.audio.player.get_time() / msPerBeat) 
-            current_position = int(this.audio.player.get_position() * 1000 / msPerBeat)
-            if current_position != last_position:
-                last_position = current_position
+        """Move the tail to the beat."""
+        start_time = time.time()
+        while this.current.process.poll() is None:  # While the subprocess is running
+            elapsed_time = (time.time() - start_time) * 1000  # Milliseconds
+            if int(elapsed_time / msPerBeat) % 2 == 0:
                 this.toggle_tail()
 
-            # randomly move the mouth
+            # Randomly move the mouth
             if random.random() > 0.9:
                 this.toggle_mouth()
 
-            if (GPIOUtils.read_gpio(this.input.button)):
-                this.audio.player.stop()
+            if GPIOUtils.read_gpio(this.input.button):
+                this.current.process.terminate()
                 break
 
     def play_random_song(this):
         """Randomly select and play a song from ~/music."""
-
         if not this.audio.manifest:
             print("No songs found.")
             return None
@@ -152,17 +135,15 @@ class Fish:
         this.current.tempo = song_tempo
 
         print(f"Playing song: {song_choice} ({song_path})")
-        this.audio.player = this.audio.vlc.media_player_new(this.current.song)
-        this.audio.player.audio_set_volume(this.audio.volume)
-        this.audio.player.play()
 
-        # Wait for the player to start playing
-        for _ in range(10):  # Check for up to 10 seconds
-            if this.audio.player.is_playing():
-                return
-            time.sleep(0.5)
-
-        print("Failed to start playback.")
+        # Use cvlc to play the song
+        command = [
+            "sudo", "-u", "debian", "cvlc",
+            "--alsa-audio-device=hw:1,0",
+            f"--gain={this.audio.volume}",
+            song_path
+        ]
+        this.current.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 # Main Function
 def main():
@@ -171,8 +152,7 @@ def main():
         performer.worker()
     except Exception as e:
         print(f"Stopping: {e}")
-    
     performer.destroy()
-    
+
 if __name__ == "__main__":
     main()
