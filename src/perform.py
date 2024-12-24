@@ -154,5 +154,12 @@ def main():
         print(f"Stopping: {e}")
     performer.destroy()
 
+    # Just to be extra sure
+    try:
+        GPIOUtils.write_gpio(115, 0)
+        GPIOUtils.write_gpio(20, 0)
+    except:
+        pass
+
 if __name__ == "__main__":
     main()
