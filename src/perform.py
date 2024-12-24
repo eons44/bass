@@ -42,7 +42,6 @@ class Fish:
             "--aout=alsa",
             "--alsa-audio-device=hw:1,0",
             "--alsa-samplerate=44100",
-            "--audio-channels=1"
         )
         this.audio.player = None
         this.audio.volume = 5 # testing
