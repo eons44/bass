@@ -81,7 +81,7 @@ class Fish:
         print("Starting worker...")
         while True:
             if GPIOUtils.read_gpio(this.input.button):
-                print("Button pressed.")
+                print("Button pressed!")
                 this.play_random_song()
                 this.motor_dance_to_beat(this.detect_tempo())
             time.sleep(0.5)
@@ -129,7 +129,7 @@ class Fish:
                 this.player.stop()
                 break
 
-    def play_random_song():
+    def play_random_song(this):
         """Randomly select and play a song from ~/music."""
 
         if not this.audio.manifest:
