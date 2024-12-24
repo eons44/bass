@@ -64,21 +64,24 @@ class Fish:
         this.current.song = None
         this.current.tempo = None
 
+        print("Initialization complete.")
+
     def destroy(this):
         GPIOUtils.write_gpio(this.pin.output.motor.tail, 0)
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
-        GPIOUtils.write_gpio(this.input.button, 0)
 
-        # TODO: operation not permitted errors?
-        # GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
-        # GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
-        # GPIOUtils.unexport_gpio(this.input.button)
+        GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
+        GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
+        GPIOUtils.unexport_gpio(this.input.button)
 
         print("Cleanup complete.")
 
     def worker(this):
+        """Main worker function."""
+        print("Starting worker...")
         while True:
             if GPIOUtils.read_gpio(this.input.button):
+                print("Button pressed.")
                 this.play_random_song()
                 this.motor_dance_to_beat(this.detect_tempo())
             time.sleep(0.5)
