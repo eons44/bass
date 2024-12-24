@@ -86,7 +86,7 @@ class Fish:
         # print(f"Detected tempo: {tempo:.2f} BPM")
         # return 60000 / tempo   # Convert BPM to milliseconds per beat
 
-    def toggle_mouth(this.):
+    def toggle_mouth(this):
         """Toggle the mouth motor."""
         write_gpio(this.pin.output.motor.mouth, 1)
         time.sleep(0.2)
