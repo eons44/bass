@@ -1,101 +1,155 @@
 import os
 import random
 import time
+# import librosa  # For audio analysis
 import vlc  # For audio playback
+import eons
 
-# GPIO Pin Definitions
-MOTOR_1_PIN = 20  # GPIO 20, P9_41
-MOTOR_2_PIN = 115  # GPIO 115, P9_27
-BUTTON_PIN = 65    # GPIO 65, P8_18
+class GPIOUtils:
+    @staticmethod
+    def export_gpio(pin):
+        if not os.path.exists(f"/sys/class/gpio/gpio{pin}"):
+            with open("/sys/class/gpio/export", "w") as f:
+                f.write(str(pin))
 
-# GPIO Setup
-def export_gpio(pin):
-    if not os.path.exists(f"/sys/class/gpio/gpio{pin}"):
-        with open("/sys/class/gpio/export", "w") as f:
-            f.write(str(pin))
+    @staticmethod
+    def unexport_gpio(pin):
+        if os.path.exists(f"/sys/class/gpio/gpio{pin}"):
+            with open("/sys/class/gpio/unexport", "w") as f:
+                f.write(str(pin))
 
-def set_gpio_direction(pin, direction):
-    with open(f"/sys/class/gpio/gpio{pin}/direction", "w") as f:
-        f.write(direction)
+    @staticmethod
+    def set_gpio_direction(pin, direction):
+        with open(f"/sys/class/gpio/gpio{pin}/direction", "w") as f:
+            f.write(direction)
 
-def write_gpio(pin, value):
-    with open(f"/sys/class/gpio/gpio{pin}/value", "w") as f:
-        f.write(str(value))
+    @staticmethod
+    def write_gpio(pin, value):
+        with open(f"/sys/class/gpio/gpio{pin}/value", "w") as f:
+            f.write(str(value))
 
-# Initialize GPIO Pins
-def initialize_pins():
-    export_gpio(MOTOR_1_PIN)
-    export_gpio(MOTOR_2_PIN)
-    export_gpio(BUTTON_PIN)
 
-    set_gpio_direction(MOTOR_1_PIN, "out")
-    set_gpio_direction(MOTOR_2_PIN, "out")
-    set_gpio_direction(BUTTON_PIN, "in")
+class Fish:
+    def __init__(this):
+        this.audio = eons.util.DotDict()
+        this.audio.manifest = json.loads(os.path.expanduser("~/music.manifest"))
+        this.audio.vlc = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
+        this.audio.player = None
 
-# Motor Control
-def motor_dance():
-    """Make the motors move in a dancing pattern."""
-    for _ in range(10):  # Dance for 10 cycles
-        write_gpio(MOTOR_1_PIN, 1)
+        this.pin = eons.util.DotDict()
+        this.pin.output = eons.util.DotDict()
+        this.pin.output.motor = eons.util.DotDict()
+        this.pin.output.motor.tail = 20 # GPIO 20, P9_41 (Tail)
+        this.pin.output.motor.mouth = 115 # GPIO 115, P9_27 (mouth)
+        this.input = eons.util.DotDict()
+        this.input.button = 65 # GPIO 65, P8_18
+
+        GPIOUtils.export_gpio(this.pin.output.motor.tail)
+        GPIOUtils.export_gpio(this.pin.output.motor.mouth)
+        GPIOUtils.export_gpio(this.input.button)
+
+        GPIOUtils.set_gpio_direction(this.pin.output.motor.tail, "out")
+        GPIOUtils.set_gpio_direction(this.pin.output.motor.mouth, "out")
+        GPIOUtils.set_gpio_direction(this.input.button, "in")
+
+        this.current = eons.util.DotDict()
+        this.current.song = None
+        this.current.tempo = None
+
+    def destroy(this):
+        GPIOUtils.write_gpio(this.pin.output.motor.tail, 0)
+        GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
+        GPIOUtils.write_gpio(this.input.button, 0)
+
+        GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
+        GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
+        GPIOUtils.unexport_gpio(this.input.button)
+
+    def worker(this):
+        while True:
+            if GPIOUtils.read_gpio(this.input.button):
+                this.play_random_song()
+                this.motor_dance_to_beat(this.detect_tempo())
+            time.sleep(0.5)
+
+    def detect_tempo(this):
+        """Detect the tempo (BPM) of the song."""
+        
+        # Easy way: use the manifest
+        return this.current.tempo
+
+        # Hard way: will auto-detect tempo
+        # (Librosa never successfully installed on the BeagleBone Black.)
+        # print(f"Analyzing tempo for: {this.current.song}")
+        # y, sr = librosa.load(this.current.song, sr=None)  # Load the audio file
+        # tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+        # print(f"Detected tempo: {tempo:.2f} BPM")
+        # return tempo * 16.67  # Convert BPM to milliseconds per beat
+
+    def toggle_mouth(this.):
+        """Toggle the mouth motor."""
+        write_gpio(this.pin.output.motor.mouth, 1)
         time.sleep(0.2)
-        write_gpio(MOTOR_1_PIN, 0)
-        write_gpio(MOTOR_2_PIN, 1)
-        time.sleep(0.2)
-        write_gpio(MOTOR_2_PIN, 0)
+        write_gpio(this.pin.output.motor.mouth, 0)
 
-# Select and Play Music
-def play_random_song():
-    """Randomly select and play a song from ~/music."""
-    music_dir = os.path.expanduser("~/music")
-    songs = [f for f in os.listdir(music_dir) if f.endswith(('.mp3', '.wav'))]
+    def toggle_tail(this):
+        """Toggle the tail motor."""
+        write_gpio(this.pin.output.motor.tail, 1)
+        time.sleep(0.4)
+        write_gpio(this.pin.output.motor.tail, 0)
 
-    if not songs:
-        print("No songs found in ~/music.")
-        return None
+    def motor_dance_to_beat(this, msPerBeat=500):
+        """Move the tail to the beat using VLC's playback position."""
+        last_position = -1
+        while this.player.is_playing():
+            current_position = int(player.get_time() / msPerBeat) 
+            if current_position != last_position:
+                last_position = current_position
+                this.toggle_tail()
 
-    song = random.choice(songs)
-    song_path = os.path.join(music_dir, song)
+            # randomly move the mouth
+            if random.random() > 0.9:
+                toggle_mouth()
 
-    instance = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
-    player = instance.media_player_new(song_path)
-    player.play()
+            if (GPIOUtils.read_gpio(this.input.button)):
+                this.player.stop()
+                break
 
-     # Wait for the player to start playing
-    for _ in range(10):  # Check for up to 10 seconds
-        if player.is_playing():
-            return player
-        time.sleep(0.5)
+    def play_random_song():
+        """Randomly select and play a song from ~/music."""
 
-    print("Failed to start playback.")
-    return None
+        if not this.audio.manifest:
+            print("No songs found.")
+            return None
+
+        song_choice = random.choice(list(this.audio.manifest.keys()))
+        song_path = os.path.expanduser(this.audio.manifest[song_choice])
+        song_tempo = this.audio.manifest[song_choice]["tempo"]
+
+        this.current.song = song_path
+        this.current.tempo = song_tempo
+
+        print(f"Playing song: {song}")
+        this.audio.player = instance.media_player_new(this.current.song)
+        this.player.play()
+
+        # Wait for the player to start playing
+        for _ in range(10):  # Check for up to 10 seconds
+            if this.player.is_playing():
+                return
+            time.sleep(0.5)
+
+        print("Failed to start playback.")
 
 # Main Function
 def main():
+    performer = Fish()
     try:
-        print("Initializing...\n")
-        initialize_pins()
-
-        print("Starting fish performance!\n")
-        player = play_random_song()
-
-        if player:
-            while player.is_playing():  # While music is playing
-                motor_dance()
-                time.sleep(1)
-
-        print("Performance complete.\n")
-
-    except KeyboardInterrupt:
-        print("\nInterrupted by user.")
-
+        performer.worker()
     except Exception as e:
-        print(f"Error: {e}")
-
-    finally:
-        print("Cleaning up GPIO...")
-        write_gpio(MOTOR_1_PIN, 0)
-        write_gpio(MOTOR_2_PIN, 0)
-        print("GPIO cleanup complete.")
-
+        print(f"Stopping: {e}")
+    
+    performer.destroy()
+    
 if __name__ == "__main__":
     main()
