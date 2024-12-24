@@ -32,7 +32,7 @@ class GPIOUtils:
 class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
-        this.audio.manifest = json.loads(os.path.expanduser("~/music.manifest"))
+        this.audio.manifest = json.loads(os.path.expanduser("~/music.json"))
         this.audio.vlc = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
         this.audio.player = None
 
@@ -84,7 +84,7 @@ class Fish:
         # y, sr = librosa.load(this.current.song, sr=None)  # Load the audio file
         # tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
         # print(f"Detected tempo: {tempo:.2f} BPM")
-        # return tempo * 16.67  # Convert BPM to milliseconds per beat
+        # return 60000 / tempo   # Convert BPM to milliseconds per beat
 
     def toggle_mouth(this.):
         """Toggle the mouth motor."""
@@ -123,7 +123,7 @@ class Fish:
             return None
 
         song_choice = random.choice(list(this.audio.manifest.keys()))
-        song_path = os.path.expanduser(this.audio.manifest[song_choice])
+        song_path = os.path.expanduser(this.audio.manifest[song_choice]["path"])
         song_tempo = this.audio.manifest[song_choice]["tempo"]
 
         this.current.song = song_path
