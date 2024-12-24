@@ -138,7 +138,7 @@ class Fish:
 
         # Use cvlc to play the song
         command = [
-            "sudo", "-u", "debian", "cvlc",
+            "cvlc",
             "--alsa-audio-device=hw:1,0",
             f"--gain={this.audio.volume}",
             song_path
@@ -147,7 +147,8 @@ class Fish:
             this.current.process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                user=1000
             )
             stdout, stderr = this.current.process.communicate()  # Wait for the process
             if stderr:
