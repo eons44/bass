@@ -29,6 +29,10 @@ class GPIOUtils:
         with open(f"/sys/class/gpio/gpio{pin}/value", "w") as f:
             f.write(str(value))
 
+    @staticmethod
+    def read_gpio(pin):
+        with open(f"/sys/class/gpio/gpio{pin}/value", "r") as f:
+            return int(f.read().strip())
 
 class Fish:
     def __init__(this):
@@ -65,9 +69,12 @@ class Fish:
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
         GPIOUtils.write_gpio(this.input.button, 0)
 
-        GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
-        GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
-        GPIOUtils.unexport_gpio(this.input.button)
+        # TODO: operation not permitted errors?
+        # GPIOUtils.unexport_gpio(this.pin.output.motor.tail)
+        # GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
+        # GPIOUtils.unexport_gpio(this.input.button)
+
+        print("Cleanup complete.")
 
     def worker(this):
         while True:
