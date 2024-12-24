@@ -143,7 +143,7 @@ class Fish:
         this.current.song = song_path
         this.current.tempo = song_tempo
 
-        print(f"Playing song: {song}")
+        print(f"Playing song: {song_choice} ({song_path})")
         this.audio.player = instance.media_player_new(this.current.song)
         this.player.play()
 
