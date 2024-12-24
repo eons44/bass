@@ -44,6 +44,9 @@ class Fish:
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
 
+        # Set volume to 50%
+        this.audio.vlc.audio_set_volume(50)
+
         this.pin = eons.util.DotDict()
         this.pin.output = eons.util.DotDict()
         this.pin.output.motor = eons.util.DotDict()
@@ -123,7 +126,7 @@ class Fish:
 
             # randomly move the mouth
             if random.random() > 0.9:
-                toggle_mouth()
+                this.toggle_mouth()
 
             if (GPIOUtils.read_gpio(this.input.button)):
                 this.audio.player.stop()
