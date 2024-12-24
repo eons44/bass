@@ -38,9 +38,14 @@ class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
         this.audio.manifest = None
-        this.audio.vlc = vlc.Instance("--aout=alsa", "--alsa-audio-device=hw:1,0")
+        this.audio.vlc = vlc.Instance(
+            "--aout=alsa",
+            "--alsa-audio-device=hw:1,0",
+            "--alsa-samplerate=44100",
+            "--audio-channels=1"
+        )
         this.audio.player = None
-        this.audio.volume = 60
+        this.audio.volume = 5 # testing
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
@@ -89,6 +94,8 @@ class Fish:
 
     def detect_tempo(this):
         """Detect the tempo (BPM) of the song."""
+
+        print(f"Tempo for {this.current.song} is {this.current.tempo} ms / beat.")
         
         # Easy way: use the manifest
         return this.current.tempo
@@ -117,7 +124,8 @@ class Fish:
         """Move the tail to the beat using VLC's playback position."""
         last_position = -1
         while this.audio.player.is_playing():
-            current_position = int(this.audio.player.get_time() / msPerBeat) 
+            # current_position = int(this.audio.player.get_time() / msPerBeat) 
+            current_position = int(this.audio.player.get_position() * 1000 / msPerBeat)
             if current_position != last_position:
                 last_position = current_position
                 this.toggle_tail()
