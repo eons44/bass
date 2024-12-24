@@ -116,7 +116,7 @@ class Fish:
         """Move the tail to the beat using VLC's playback position."""
         last_position = -1
         while this.audio.player.is_playing():
-            current_position = int(player.get_time() / msPerBeat) 
+            current_position = int(this.audio.player.get_time() / msPerBeat) 
             if current_position != last_position:
                 last_position = current_position
                 this.toggle_tail()
