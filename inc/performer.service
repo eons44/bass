@@ -1,0 +1,16 @@
+[Unit]
+Description=Fish Performer Service
+After=multi-user.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/debian/bass/src
+ExecStart=/usr/bin/python3 /home/debian/bass/src/fish_dance.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
