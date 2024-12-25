@@ -174,10 +174,23 @@ class Fish:
             print(f"Playback error: {e}")
             this.cleanup()
 
+    def play_startup_audio(this):
+        """Play the startup audio file."""
+        startup_audio_path = os.path.expanduser("/home/debian/music/hi_dan_ready.mp3")
+        print(f"Playing startup audio: {startup_audio_path}")
+        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain=0.05 '{startup_audio_path}' &"
+        try:
+            os.system(command)
+            time.sleep(5)  # Ensure the audio finishes playing
+            this.cleanup()
+        except Exception as e:
+            print(f"Startup audio error: {e}")
+
 # Main Function
 def main():
     performer = Fish()
     try:
+        performer.play_startup_audio()
         performer.worker()
     except Exception as e:
         print(f"Stopping: {e}")
