@@ -36,7 +36,7 @@ class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
         this.audio.manifest = None
-        this.audio.volume = 0.5  # VLC gain value (e.g., 5% volume)
+        this.audio.volume = 0.2  # VLC gain value (e.g., 5% volume)
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
@@ -167,7 +167,7 @@ class Fish:
         print(f"Playing song: {song_choice} ({song_path})")
 
         # Use cvlc to play the song
-        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain=0.05 '{this.current.song.path}' &"
+        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain={this.audio.volume} '{this.current.song.path}' &"
         try:
             os.system(command)
         except Exception as e:
@@ -178,7 +178,7 @@ class Fish:
         """Play the startup audio file."""
         startup_audio_path = os.path.expanduser("/home/debian/music/hi_dan_ready.mp3")
         print(f"Playing startup audio: {startup_audio_path}")
-        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain=0.05 '{startup_audio_path}' &"
+        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain={this.audio.volume} '{startup_audio_path}' &"
         try:
             os.system(command)
             time.sleep(5)  # Ensure the audio finishes playing
