@@ -66,13 +66,18 @@ class Fish:
         print("Initialization complete.")
 
     @staticmethod
-    def cleanup():
+    def static_cleanup():
         try:
             GPIOUtils.write_gpio(115, 0)
             GPIOUtils.write_gpio(20, 0)
         except:
             pass
         os.system("killall vlc")
+
+        print("Static cleanup complete.")
+
+    def cleanup(this):
+        this.static_cleanup()
 
         this.current.song.path = None
         this.current.song.tempo = 0
@@ -176,7 +181,7 @@ def main():
     performer.destroy()
 
     # Just to be extra sure
-    Fish.cleanup()
+    Fish.static_cleanup()
 
 if __name__ == "__main__":
     main()

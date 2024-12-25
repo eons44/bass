@@ -1,19 +1,19 @@
 {
     "Sex Machine": {
         "artist": "James Brown",
-        "path": "~/music/Get Up (I Feel Like Being A) Sex Machine.mp3",
+        "path": "/home/debian/music/Get Up (I Feel Like Being A) Sex Machine.mp3",
         "tempo": 555,
         "length": 327
     },
     "Back in the USSR": {
         "artist": "The Beatles",
-        "path": "~/music/Back in the USSR.mp3",
+        "path": "/home/debian/music/Back in the USSR.mp3",
         "tempo": 465,
         "length": 163
     },
     "September": {
         "artist": "Earth Wind and Fire",
-        "path": "~/music/September.mp3",
+        "path": "/home/debian/music/September.mp3",
         "tempo": 476,
         "length": 215
     }
