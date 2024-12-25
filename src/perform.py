@@ -138,7 +138,7 @@ class Fish:
             # if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
             #     # this.toggle_tail()
 
-            Randomly move the mouth
+            # Randomly move the mouth
             if random.random() > 0.9:
                 this.toggle_mouth()
 
