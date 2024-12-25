@@ -2,7 +2,6 @@ import os
 import random
 import time
 import json
-import subprocess
 import eons
 
 class GPIOUtils:
@@ -59,13 +58,32 @@ class Fish:
         GPIOUtils.set_gpio_direction(this.input.button, "in")
 
         this.current = eons.util.DotDict()
-        this.current.song = None
-        this.current.tempo = None
-        this.current.process = None
+        this.current.song = eons.util.DotDict()
+        this.current.song.path = None
+        this.current.song.tempo = None
+        this.current.song.length = None
 
         print("Initialization complete.")
 
+    @staticmethod
+    def cleanup():
+        try:
+            GPIOUtils.write_gpio(115, 0)
+            GPIOUtils.write_gpio(20, 0)
+        except:
+            pass
+        os.system("killall vlc")
+
+        this.current.song.path = None
+        this.current.song.tempo = 0
+        this.current.song.length = 0
+
+        print("Cleanup complete.")
+
     def destroy(this):
+        """Cleanup and destroy the object."""
+        this.cleanup()
+
         GPIOUtils.write_gpio(this.pin.output.motor.tail, 0)
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
 
@@ -73,10 +91,7 @@ class Fish:
         GPIOUtils.unexport_gpio(this.pin.output.motor.mouth)
         GPIOUtils.unexport_gpio(this.input.button)
 
-        if this.current.process:
-            this.current.process.terminate()
-
-        print("Cleanup complete.")
+        print("Destruction complete.")
 
     def worker(this):
         """Main worker function."""
@@ -84,14 +99,17 @@ class Fish:
         while True:
             if GPIOUtils.read_gpio(this.input.button):
                 print("Button pressed!")
-                this.play_random_song()
-                this.motor_dance_to_beat(this.detect_tempo())
+                if (this.current.song.path):
+                    this.cleanup()
+                else:
+                    this.play_random_song()
+                    this.motor_dance_to_beat(this.detect_tempo())
             time.sleep(0.5)
 
     def detect_tempo(this):
         """Detect the tempo (BPM) of the song."""
-        print(f"Tempo for {this.current.song} is {this.current.tempo} ms / beat.")
-        return this.current.tempo
+        print(f"Tempo for {this.current.song.path} is {this.current.song.tempo} ms / beat.")
+        return this.current.song.tempo
 
     def toggle_mouth(this):
         """Toggle the mouth motor."""
@@ -108,9 +126,11 @@ class Fish:
     def motor_dance_to_beat(this, msPerBeat=500):
         """Move the tail to the beat."""
         start_time = time.time()
-        while this.current.process.poll() is None:  # While the subprocess is running
-            elapsed_time = (time.time() - start_time) * 1000  # Milliseconds
-            if int(elapsed_time / msPerBeat) % 2 == 0:
+        elapsed_seconds = 0
+        while elapsed_seconds <= this.current.song.length:
+            elapsed_seconds = time.time() - start_time
+            elapsed_milliseconds = elapsed_seconds * 1000 
+            if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
                 this.toggle_tail()
 
             # Randomly move the mouth
@@ -118,7 +138,7 @@ class Fish:
                 this.toggle_mouth()
 
             if GPIOUtils.read_gpio(this.input.button):
-                this.current.process.terminate()
+                this.cleanup()
                 break
 
     def play_random_song(this):
@@ -130,32 +150,21 @@ class Fish:
         song_choice = random.choice(list(this.audio.manifest.keys()))
         song_path = os.path.expanduser(this.audio.manifest[song_choice]["path"])
         song_tempo = this.audio.manifest[song_choice]["tempo"]
+        song_length = this.audio.manifest[song_choice]["length"]
 
-        this.current.song = song_path
-        this.current.tempo = song_tempo
+        this.current.song.path = song_path
+        this.current.song.tempo = song_tempo
+        this.current.song.length = song_length
 
         print(f"Playing song: {song_choice} ({song_path})")
 
         # Use cvlc to play the song
-        command = [
-            "cvlc",
-            "--alsa-audio-device=hw:1,0",
-            f"--gain={this.audio.volume}",
-            song_path
-        ]
+        command = f"sudo -u debian cvlc --alsa-audio-device=hw:1,0 --gain=0.05 '{this.current.song.path}' &"
         try:
-            this.current.process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                user=1000
-            )
-            stdout, stderr = this.current.process.communicate()  # Wait for the process
-            if stderr:
-                print("Error during playback:", stderr.decode())
+            os.system(command)
         except Exception as e:
-            print(f"Subprocess error: {e}")
-            this.current.process = None
+            print(f"Playback error: {e}")
+            this.cleanup()
 
 # Main Function
 def main():
@@ -167,11 +176,7 @@ def main():
     performer.destroy()
 
     # Just to be extra sure
-    try:
-        GPIOUtils.write_gpio(115, 0)
-        GPIOUtils.write_gpio(20, 0)
-    except:
-        pass
+    Fish.cleanup()
 
 if __name__ == "__main__":
     main()
