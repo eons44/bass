@@ -119,7 +119,7 @@ class Fish:
     def toggle_mouth(this):
         """Toggle the mouth motor."""
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 1)
-        time.sleep(0.05)
+        time.sleep(0.1)
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
 
     def toggle_tail(this):
