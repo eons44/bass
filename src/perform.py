@@ -134,13 +134,14 @@ class Fish:
         elapsed_seconds = 0
         while elapsed_seconds <= this.current.song.length:
             elapsed_seconds = time.time() - start_time
-            # elapsed_milliseconds = elapsed_seconds * 1000 
-            # if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
-            #     # this.toggle_tail()
+            elapsed_milliseconds = elapsed_seconds * 1000 
+            if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
+                # this.toggle_tail()
+                this.toggle_mouth()
 
             # Randomly move the mouth
-            if random.random() > 0.2:
-                this.toggle_mouth()
+            # if random.random() > 0.2:
+            #     this.toggle_mouth()
 
             if GPIOUtils.read_gpio(this.input.button):
                 this.cleanup()
