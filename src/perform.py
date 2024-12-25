@@ -36,7 +36,7 @@ class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
         this.audio.manifest = None
-        this.audio.volume = 0.3  # VLC gain value (e.g., 5% volume)
+        this.audio.volume = 0.5  # VLC gain value (e.g., 5% volume)
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
@@ -139,7 +139,7 @@ class Fish:
             #     # this.toggle_tail()
 
             # Randomly move the mouth
-            if random.random() > 0.9:
+            if random.random() > 0.2:
                 this.toggle_mouth()
 
             if GPIOUtils.read_gpio(this.input.button):
