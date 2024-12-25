@@ -8,7 +8,7 @@ Type=simple
 User=root
 Group=root
 WorkingDirectory=/home/debian/bass/src
-ExecStart=/usr/bin/python3 /home/debian/bass/src/fish_dance.py
+ExecStart=/usr/bin/python3 /home/debian/bass/src/perform.py
 Restart=always
 RestartSec=5
 
