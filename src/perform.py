@@ -36,7 +36,7 @@ class Fish:
     def __init__(this):
         this.audio = eons.util.DotDict()
         this.audio.manifest = None
-        this.audio.volume = 0.05  # VLC gain value (e.g., 5% volume)
+        this.audio.volume = 0.3  # VLC gain value (e.g., 5% volume)
 
         with open(os.path.expanduser("~/music.json")) as f:
             this.audio.manifest = json.load(f)
@@ -119,7 +119,7 @@ class Fish:
     def toggle_mouth(this):
         """Toggle the mouth motor."""
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 1)
-        time.sleep(0.2)
+        time.sleep(0.05)
         GPIOUtils.write_gpio(this.pin.output.motor.mouth, 0)
 
     def toggle_tail(this):
@@ -134,18 +134,19 @@ class Fish:
         elapsed_seconds = 0
         while elapsed_seconds <= this.current.song.length:
             elapsed_seconds = time.time() - start_time
-            elapsed_milliseconds = elapsed_seconds * 1000 
-            if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
-                # this.toggle_tail()
-                this.toggle_mouth()
+            # elapsed_milliseconds = elapsed_seconds * 1000 
+            # if int(elapsed_milliseconds / msPerBeat) % 2 == 0:
+            #     # this.toggle_tail()
 
-            # Randomly move the mouth
-            # if random.random() > 0.9:
-            #     this.toggle_mouth()
+            Randomly move the mouth
+            if random.random() > 0.9:
+                this.toggle_mouth()
 
             if GPIOUtils.read_gpio(this.input.button):
                 this.cleanup()
                 break
+
+            time.sleep(0.1)
 
     def play_random_song(this):
         """Randomly select and play a song from ~/music."""
